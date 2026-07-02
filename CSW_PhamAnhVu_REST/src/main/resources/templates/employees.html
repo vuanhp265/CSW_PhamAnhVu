@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Web Service Test</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <h1>CSW Practical Test - Employee REST API</h1>
+    <p class="subtitle">Web application to test getEmployees, addEmployees and updateEmployee.</p>
+
+    <section class="card">
+        <h2>Add Employee</h2>
+        <form id="addForm">
+            <input type="text" id="addName" placeholder="Employee name" required>
+            <input type="number" id="addSalary" placeholder="Salary" step="0.01" min="0" required>
+            <button type="submit">Add Employee</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>Update Employee</h2>
+        <form id="updateForm">
+            <input type="number" id="updateId" placeholder="Employee ID" min="1" required>
+            <input type="text" id="updateName" placeholder="New name" required>
+            <input type="number" id="updateSalary" placeholder="New salary" step="0.01" min="0" required>
+            <button type="submit">Update Employee</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="table-header">
+            <h2>Employee List</h2>
+            <button onclick="loadEmployees()">Refresh</button>
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Salary</th>
+            </tr>
+            </thead>
+            <tbody id="employeeTableBody"></tbody>
+        </table>
+    </section>
+
+    <p id="message"></p>
+</div>
+
+<script>
+    const apiUrl = '/api/employees';
+    const message = document.getElementById('message');
+
+    async function loadEmployees() {
+        const response = await fetch(apiUrl);
+        const employees = await response.json();
+        const tableBody = document.getElementById('employeeTableBody');
+        tableBody.innerHTML = '';
+
+        employees.forEach(employee => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${employee.id}</td><td>${employee.name}</td><td>${employee.salary}</td>`;
+            tableBody.appendChild(row);
+        });
+    }
+
+    document.getElementById('addForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const employee = {
+            name: document.getElementById('addName').value,
+            salary: Number(document.getElementById('addSalary').value)
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(employee)
+        });
+
+        if (response.ok) {
+            message.textContent = 'Employee added successfully.';
+            this.reset();
+            await loadEmployees();
+        } else {
+            message.textContent = 'Cannot add employee.';
+        }
+    });
+
+    document.getElementById('updateForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const id = document.getElementById('updateId').value;
+        const employee = {
+            name: document.getElementById('updateName').value,
+            salary: Number(document.getElementById('updateSalary').value)
+        };
+
+        const response = await fetch(`${apiUrl}/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(employee)
+        });
+
+        if (response.ok) {
+            message.textContent = 'Employee updated successfully.';
+            this.reset();
+            await loadEmployees();
+        } else {
+            message.textContent = 'Cannot update employee. Please check the ID.';
+        }
+    });
+
+    loadEmployees();
+</script>
+</body>
+</html>
